@@ -56,6 +56,12 @@ const supabase = getSupabaseClient();
 const redirectTo = getAuthEmailRedirectTo("/auth/callback");
 ```
 
+Environment:
+- Copy `.env.example` to `.env` and set:
+  - `REACT_APP_BACKEND_URL` (required)
+  - `REACT_APP_SUPABASE_URL` and `REACT_APP_SUPABASE_ANON_KEY` (optional, only if using the Supabase JS client)
+  - `REACT_APP_SITE_URL` for consistent redirects (optional, defaults to current origin)
+
 See `assets/supabase.md` for more details.
 
 ## Theming
