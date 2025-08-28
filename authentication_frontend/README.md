@@ -10,7 +10,9 @@ This app provides a complete authentication flow with React Router, reusable UI 
 2. Configure environment:
    - cp .env.example .env
    - Fill in as needed:
-     - REACT_APP_BACKEND_URL (e.g., http://localhost:8000)
+     - REACT_APP_BACKEND_URL (e.g., http://localhost:8000). In this environment, use:
+       https://vscode-internal-34468-beta.beta01.cloud.kavia.ai:3001
+       If not set, the app will call endpoints relative to the frontend origin and may receive HTML (e.g., index.html), causing JSON parse errors.
      - REACT_APP_SUPABASE_URL (optional, if using Supabase client in browser)
      - REACT_APP_SUPABASE_ANON_KEY (optional)
      - REACT_APP_SITE_URL (optional for local dev, used for Supabase email redirects)
