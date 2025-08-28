@@ -6,16 +6,48 @@
  * or https://vscode-internal-34468-beta.beta01.cloud.kavia.ai:3001). The request() helper below
  * has been hardened to detect non-JSON responses and surface helpful hints.
  */
-const DEFAULT_BASE_URL = process.env.REACT_APP_BACKEND_URL || ""; // Optionally provided by environment
+const RAW_BASE_URL = process.env.REACT_APP_BACKEND_URL || ""; // Optionally provided by environment
+
+/**
+ * Normalize the backend base URL:
+ * - trims whitespace
+ * - removes trailing slash
+ */
+function getBackendBaseUrl() {
+  const b = (RAW_BASE_URL || "").trim();
+  if (!b) return "";
+  return b.endsWith("/") ? b.slice(0, -1) : b;
+}
+
+/**
+ * PUBLIC_INTERFACE
+ */
+export function getCurrentBackendBaseUrl() {
+  /** Returns the normalized backend base URL used by the API client. */
+  return getBackendBaseUrl();
+}
 
 /**
  * Internal helper for fetch with JSON, error normalization.
  * - Uses Content-Type header to decide JSON parsing.
  * - Returns helpful error messages for HTML/text responses (e.g., served by frontend dev server).
+ * - Detects missing base URL and provides actionable guidance.
  */
 async function request(path, options = {}) {
-  const base = DEFAULT_BASE_URL || "";
-  const url = `${base}${path}`;
+  const base = getBackendBaseUrl();
+
+  if (!base) {
+    return {
+      ok: false,
+      status: 0,
+      error:
+        "Backend URL is not configured. Set REACT_APP_BACKEND_URL in .env to your FastAPI backend (e.g., http://localhost:8000). See ENV_CHECKLIST.md.",
+    };
+  }
+
+  // Ensure path begins with a single slash
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const url = `${base}${normalizedPath}`;
   const headers = {
     "Content-Type": "application/json",
     ...(options.headers || {}),
@@ -49,9 +81,11 @@ async function request(path, options = {}) {
         `Request failed with status ${res.status}`;
 
       // Detect common misconfigurations: HTML from frontend dev server or 404 HTML
-      const looksLikeHtml = (rawText || "").trim().startsWith("<!DOCTYPE") || (rawText || "").trim().startsWith("<html");
+      const looksLikeHtml =
+        (rawText || "").trim().startsWith("<!DOCTYPE") ||
+        (rawText || "").trim().startsWith("<html");
       const hint = looksLikeHtml
-        ? "Received HTML instead of JSON. Check REACT_APP_BACKEND_URL and that the backend is reachable and CORS is configured."
+        ? `Received HTML instead of JSON from ${url}. Check REACT_APP_BACKEND_URL (${base}) and that the backend is reachable and CORS is configured.`
         : "";
 
       return {
@@ -77,11 +111,18 @@ async function request(path, options = {}) {
     return { ok: true, status: res.status, data: rawText };
   } catch (err) {
     // Network or CORS failure will appear here
-    const msg =
-      err && err.message
-        ? err.message
-        : "Network error. Verify backend URL and connectivity.";
-    return { ok: false, status: 0, error: msg };
+    const networkMsg =
+      err && err.message ? err.message : "Network error occurred.";
+
+    // Provide CORS guidance when running on different origins
+    const corsHint =
+      " This may be due to CORS or an unreachable backend. Ensure the backend is running and configured to allow the frontend origin.";
+
+    return {
+      ok: false,
+      status: 0,
+      error: `${networkMsg}.${corsHint} URL attempted: ${getBackendBaseUrl()}`,
+    };
   }
 }
 
