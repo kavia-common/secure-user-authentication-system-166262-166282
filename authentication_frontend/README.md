@@ -1,4 +1,4 @@
-# React Authentication Frontend (Tailwind + shadcn/ui ready)
+# React Authentication Frontend (Tailwind + shadcn/ui style)
 
 This app provides a complete authentication flow with React Router, reusable UI components, validation utilities, and a central API service that talks to the FastAPI backend.
 
@@ -9,23 +9,23 @@ This app provides a complete authentication flow with React Router, reusable UI 
 
 2. Configure environment:
    - cp .env.example .env
-   - Fill in:
-     - REACT_APP_SUPABASE_URL
-     - REACT_APP_SUPABASE_ANON_KEY
-     - REACT_APP_SITE_URL (optional for local dev)
+   - Fill in as needed:
      - REACT_APP_BACKEND_URL (e.g., http://localhost:8000)
+     - REACT_APP_SUPABASE_URL (optional, if using Supabase client in browser)
+     - REACT_APP_SUPABASE_ANON_KEY (optional)
+     - REACT_APP_SITE_URL (optional for local dev, used for Supabase email redirects)
 
 3. Start dev server:
    - npm start
 
 ## Routes
 
-- /              Home
-- /signup        Create account
-- /verify-email  Verify email with code
-- /signin        Sign in
-- /forgot-password Initiate password reset
-- /reset-password  Reset password via email + code
+- /                 Home
+- /signup           Create account
+- /verify-email     Verify email with code
+- /signin           Sign in
+- /forgot-password  Initiate password reset
+- /reset-password   Reset password via email + code
 
 ## Components
 
@@ -36,16 +36,16 @@ This app provides a complete authentication flow with React Router, reusable UI 
 
 ## Validation
 
-- src/lib/validation.js provides basic validators for required, email format, password strength.
+- src/lib/validation.js provides validators for required fields, email format, and password strength.
 
 ## API Service
 
-- src/services/api.js centralizes all backend calls (signup, send code, verify, signin, forgot, reset).
+- src/services/api.js centralizes backend calls (signup, send code, verify, signin, forgot, reset).
 - Configure REACT_APP_BACKEND_URL to point to your FastAPI backend root.
 
 ## Supabase
 
-Use the client from `src/lib/supabase.js` if needed in future features (social logins, session handling, etc.):
+Use the client from `src/lib/supabase.js` if needed (e.g., social logins, session handling, or client-side auth):
 
 ```js
 import { getSupabaseClient, getAuthEmailRedirectTo } from "./lib/supabase";
@@ -55,3 +55,13 @@ const redirectTo = getAuthEmailRedirectTo("/auth/callback");
 ```
 
 See `assets/supabase.md` for more details.
+
+## Theming
+
+A light/dark theme toggle is included in `AuthLayout`. It toggles the `dark` class on the root element. Tailwind classes in `index.css` provide styles for both modes.
+
+## Security Notes
+
+- Frontend normalizes server errors without leaking stack traces.
+- Do not store access tokens in localStorage in production. Prefer HTTP-only cookies set by backend.
+- Environment configuration is required; do not hard-code secrets.
